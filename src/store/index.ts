@@ -10,7 +10,17 @@ export const key: InjectionKey<Store<State>> = Symbol();
 
 export const store = createStore<State>({
   state: {
-    todos: [{ id: 1, message: "Test" }],
+    todos: [{ message: "Test" }],
+  },
+  mutations: {
+    addItem(state, item) {
+      state.todos.push(item);
+    },
+    deleteItem(state, item) {
+      state.todos = state.todos.filter((todo) => {
+        return todo.message != item.message;
+      });
+    },
   },
 });
 

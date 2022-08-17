@@ -2,22 +2,32 @@
   <div class="list">
     <div class="operations-row">
       <strong>Items:</strong>
-      <button class="list-button" @click="startAction()">Add Item</button>
-      <TodoAction @turnOff="action = false" v-if="action"></TodoAction>
+      <button class="list-button" @click="createItem">Add Item</button>
+      <TodoAction
+        v-if="modal"
+        :todoCommand="command"
+        :todoItem="item"
+        @turnOff="modal = false"
+        @create="confirmCreate"
+        @delete="confirmDelete"
+      ></TodoAction>
     </div>
     <ul>
-      <li v-for="todo in todos" :key="todo.id">
-        <todo-item-vue :item="todo"></todo-item-vue>
+      <li v-for="todo in todos" :key="todo.message">
+        <todo-item-vue
+          @edit="editItem"
+          @delete="deleteItem"
+          :item="todo"
+        ></todo-item-vue>
       </li>
     </ul>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { useStore } from "../store/index";
 import TodoItemVue from "@/components/TodoItem.vue";
-import TodoItem from "../classes/TodoItem";
 import TodoAction from "@/components/TodoAction.vue";
 
 export default defineComponent({
@@ -25,16 +35,35 @@ export default defineComponent({
   components: { TodoItemVue, TodoAction },
   data() {
     return {
-      todos: [] as TodoItem[],
-      action: false,
+      modal: false,
+      command: "",
+      item: {},
     };
   },
-  mounted() {
-    this.todos = useStore().state.todos;
+  setup() {
+    const store = useStore();
+
+    return {
+      todos: computed(() => store.state.todos),
+      confirmCreate: (item: object) => store.commit("addItem", item),
+      confirmDelete: (item: object) => store.commit("deleteItem", item),
+    };
   },
   methods: {
-    startAction() {
-      this.action = true;
+    createItem() {
+      this.modal = true;
+      this.command = "create";
+      this.item = { message: "" };
+    },
+    editItem(item: object) {
+      this.modal = true;
+      this.command = "edit";
+      this.item = item;
+    },
+    deleteItem(item: object) {
+      this.modal = true;
+      this.command = "delete";
+      this.item = item;
     },
   },
 });

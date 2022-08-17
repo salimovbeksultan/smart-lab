@@ -1,9 +1,26 @@
 <template>
-  <div class="action">
-    <div class="modal-action">
+  <div @click="turnOff()" class="action">
+    <div @click.stop class="modal-action">
       <div class="modal-row">
-        <div class="modal-title">Add Item:</div>
+        <div class="modal-title">{{ title }}</div>
         <button @click="turnOff()" class="modal-button-close">╳</button>
+      </div>
+      <div class="modal-body">
+        <textarea
+          :disabled="command == 'delete'"
+          rows="4"
+          v-model="item.message"
+          class="modal-input"
+        />
+      </div>
+      <div class="modal-buttons">
+        <button
+          style="margin-left: 10px; margin-top: 10px"
+          class="list-button"
+          @click="sendItem(command, item)"
+        >
+          {{ buttonText }}
+        </button>
       </div>
     </div>
   </div>
@@ -14,9 +31,53 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TodoAction",
+  props: ["todoCommand", "todoItem"],
+  mounted() {
+    this.command = this.todoCommand;
+    this.item = this.todoItem;
+    if (this.command == "edit") this.oldItem = { ...this.item };
+  },
+  data() {
+    return {
+      item: { message: "" },
+      oldItem: { message: "" },
+      command: "",
+    };
+  },
+  computed: {
+    title() {
+      switch (this.command) {
+        case "create":
+          return "Add Item:";
+        case "edit":
+          return "Edit Item:";
+        case "delete":
+          return "Delete Item:";
+        default:
+          return "";
+      }
+    },
+    buttonText() {
+      switch (this.command) {
+        case "create":
+          return "Create Item";
+        case "edit":
+          return "Edit Item";
+        case "delete":
+          return "Remove Item";
+        default:
+          return "";
+      }
+    },
+  },
   methods: {
     turnOff() {
       this.$emit("turnOff");
+    },
+    sendItem(command: string, item: object) {
+      if (command != "edit") this.$emit(command, item);
+      else this.$emit(command, { oldItem: this.oldItem, newItem: item });
+      this.turnOff();
     },
   },
 });
@@ -61,5 +122,16 @@ export default defineComponent({
 .modal-button-close {
   background: transparent;
   border: none;
+  padding: 10px;
+}
+
+.modal-button-close:hover {
+  cursor: pointer;
+}
+
+.modal-input {
+  border: 1px solid #42b983;
+  margin-left: 10px;
+  width: 50%;
 }
 </style>
